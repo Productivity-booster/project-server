@@ -8,7 +8,7 @@ const verifyAccessToken = async (req, res, next) => {
     const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
     if(!token){
-        return res.status(401).json({message : "Invalid or missing token!"})
+        return res.status(401).json({message : "Invalid or missing token!", verification : false})
     }
     
     try {
@@ -16,7 +16,7 @@ const verifyAccessToken = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).json({message : "Invalid or expired token!"})
+        res.status(401).json({message : "Invalid or expired token!", verification : false})
         console.error(error.message)
     }   
 

@@ -5,40 +5,44 @@ import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
-const login = async (req, res) =>{
+const login = async (req, res) => {
     try {
-        const {username, password} = req.body;
+        res.clearCookie("token");
 
-        if(!username || !password){
-            return res.json({message: "Please fill in all the fields!"});
-        }
-        
-        const [user] = await db.promise().query('select * from users where username = ?', [username]);
+        const { username, password } = req.body;
 
-        if(user.length<1){
-            return res.json({message : "User not found!"});
+        if (!username || !password || username === "" || password === "") {
+            return res.json({ message: "Please fill in all the fields!", login : false });
         }
 
-        const passwordverify = await bcrypt.compare(password, user[0].password_hash);
+        const [user] = await db.promise().query('SELECT * FROM users WHERE username = ?', [username]);
 
-        if(!passwordverify){
-            return res.json({message : "Incorrect password!"});
+        if (user.length < 1) {
+            return res.json({ message: "User not found!", login : false });
         }
 
-        const token = jwt.sign({username : username}, process.env.JWT_SECRET, {expiresIn : "3h"});
+        const passwordVerify = await bcrypt.compare(password, user[0].password_hash);
 
-        res.cookie("token", token, {
-            httpOnly : true,
-            sameSite : "Strict",
-            maxAge: 168 * 60 * 60 * 1000,
+        if (!passwordVerify) {
+            return res.json({ message: "Incorrect password!" , login : false});
+        }
+
+        // Generate a new JWT token after successful login
+        const newToken = jwt.sign({ username: username }, process.env.JWT_SECRET, { expiresIn: "3h" });
+
+        // Set the new token in a cookie
+        res.cookie("token", newToken, {
+            httpOnly: true,
+            sameSite: "Strict",
+            maxAge: 168 * 60 * 60 * 1000,  // 7 days
         });
 
-        res.status(200).json({ message: "Login successful.", token });
+        res.status(200).json({ message: "Login successful.", token: newToken, login: true });
 
     } catch (error) {
-        res.status(400).json({message : "Error logging in, please try again!"});
-        console.error(error.message)
+        res.status(400).json({ message: "Error logging in, please try again!", login : false });
+        console.error(error.message);
     }
-}
+};
 
 export default login;
