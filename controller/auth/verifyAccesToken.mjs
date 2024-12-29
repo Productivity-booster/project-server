@@ -5,7 +5,8 @@ dotenv.config();
 
 const verifyAccessToken = async (req, res, next) => {
 
-    const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token = req.cookies.token;
+    console.log(token);
 
     if(!token){
         return res.status(401).json({message : "Invalid or missing token!", verification : false})
@@ -17,7 +18,7 @@ const verifyAccessToken = async (req, res, next) => {
         next();
     } catch (error) {
         res.status(401).json({message : "Invalid or expired token!", verification : false})
-        console.error(error.message)
+        console.error("", error.message)
     }   
 
 }

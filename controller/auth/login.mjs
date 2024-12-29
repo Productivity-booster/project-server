@@ -7,7 +7,8 @@ dotenv.config();
 
 const login = async (req, res) => {
     try {
-        res.clearCookie("token");
+
+        res.clearCookie('token');
 
         const { username, password } = req.body;
 
@@ -28,12 +29,10 @@ const login = async (req, res) => {
         }
 
         // Generate a new JWT token after successful login
-        const newToken = jwt.sign({ username: username }, process.env.JWT_SECRET, { expiresIn: "3h" });
+        const newToken = jwt.sign({ username: username }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         // Set the new token in a cookie
         res.cookie("token", newToken, {
-            httpOnly: true,
-            sameSite: "Strict",
             maxAge: 168 * 60 * 60 * 1000,  // 7 days
         });
 
