@@ -8,7 +8,7 @@ const verifyAccessToken = async (req, res, next) => {
     const token = req.cookies.token;
     console.log(token);
 
-    if(!token){
+    if(!token || token === ""){
         return res.status(401).json({message : "Invalid or missing token!", verification : false})
     }
     
