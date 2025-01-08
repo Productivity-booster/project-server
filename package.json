@@ -1,0 +1,27 @@
+{
+  "name": "project-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev-pm2": "pm2 start index.mjs --watch --name my-app --max-restarts 90 --restart-delay 1000",
+    "dev-nodemon" : "nodemon index.mjs",
+    "stop": "pm2 stop my-app && pm2 delete my-app",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.12.0",
+    "nodemon": "^3.1.9",
+    "pm2": "^5.4.3"
+  },
+  "type": "module"
+}
