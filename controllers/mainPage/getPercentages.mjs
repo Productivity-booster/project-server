@@ -1,39 +1,101 @@
 import db from "../../database/db.mjs";
 
-const getPercentages = async (req, res) => {
-  const { type } = req.params;
+const getPercentage = async (req, res) => {
   const user_id = req.user.user_id;
+  const { type } = req.params;
 
   if (!type) {
-    return res.json({ message: "Please choose a type!" });
+    return res.status(400).json({ message: "Please choose a type!" });
   }
 
-  const range = type === "weekly" ? 3 : 15;
+  const interval = type === "weekly" ? 7 : 30; 
+  const dateUnit = type === "weekly" ? "DAY" : "DAY"; 
 
   try {
-    // Total assignments within the range
-    const [overallAssignmentCount] = await db.promise().query(
-      `SELECT COUNT(*) AS total 
-           FROM assignment_tracker 
-           WHERE due_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ? DAY) AND DATE_ADD(CURDATE(), INTERVAL ? DAY) AND user_id = ?`,
-      [range, range, user_id]
+    // Assignments
+    const [overallAssignments] = await db
+      .promise()
+      .query(
+        `SELECT COUNT(*) AS overallAssignments 
+         FROM assignment_tracker 
+         WHERE user_id = ? 
+         AND due_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${interval} ${dateUnit}) 
+                         AND DATE_ADD(CURDATE(), INTERVAL ${interval} ${dateUnit})`,
+        [user_id]
+      );
+
+    const [completedAssignments] = await db
+      .promise()
+      .query(
+        `SELECT COUNT(*) AS completedAssignments 
+         FROM assignment_tracker 
+         WHERE user_id = ? 
+         AND due_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${interval} ${dateUnit}) 
+                         AND DATE_ADD(CURDATE(), INTERVAL ${interval} ${dateUnit}) 
+         AND status = 'Completed'`,
+        [user_id]
+      );
+
+    const assignmentPercentage = ((completedAssignments[0].completedAssignments / overallAssignments[0].overallAssignments) * 100).toFixed(2);
+
+      // Exams
+    const [overallExams] = await db
+    .promise()
+    .query(
+      `SELECT COUNT(*) AS overallExams 
+       FROM exam_tracker 
+       WHERE user_id = ? 
+       AND date BETWEEN DATE_SUB(NOW(), INTERVAL ${interval} ${dateUnit}) 
+                       AND DATE_ADD(NOW(), INTERVAL ${interval} ${dateUnit})`,
+      [user_id]
     );
 
-    // Completed assignments within the range
-    const [completedAssignmentCount] = await db.promise().query(
-      `SELECT COUNT(*) AS completed 
-           FROM assignment_tracker 
-           WHERE due_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ? DAY) AND DATE_ADD(CURDATE(), INTERVAL ? DAY )
-           AND status = 'Completed'
-           AND user_id = ?`,
-      [range, range, user_id]
+  const [completedExams] = await db
+    .promise()
+    .query(
+      `SELECT COUNT(*) AS completedExams 
+       FROM exam_tracker 
+       WHERE user_id = ? 
+       AND date BETWEEN DATE_SUB(NOW(), INTERVAL ${interval} ${dateUnit}) AND NOW() `,
+      [user_id]
     );
 
-    console.log(overallAssignmentCount, completedAssignmentCount);
+    const examPercentage = overallExams[0].overallExams > 0 ? ((completedExams[0].completedExams / overallExams[0].overallExams) * 100).toFixed(2) : "0.00";
+
+    // Chores
+    const [overallChores] = await db
+      .promise()
+      .query(
+        `SELECT COUNT(*) AS overallChores 
+         FROM chores_tracker 
+         WHERE user_id = ? 
+         AND due_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${interval} ${dateUnit}) 
+                         AND DATE_ADD(CURDATE(), INTERVAL ${interval} ${dateUnit})`,
+        [user_id]
+      );
+
+    const [completedChores] = await db
+      .promise()
+      .query(
+        `SELECT COUNT(*) AS completedChores 
+         FROM chores_tracker 
+         WHERE user_id = ? 
+         AND due_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${interval} ${dateUnit}) 
+                         AND DATE_ADD(CURDATE(), INTERVAL ${interval} ${dateUnit}) 
+         AND status = 'Completed'`,
+        [user_id]
+      );
+
+
+      const chorePercentage =
+      overallChores[0].overallChores > 0 ? ((completedChores[0].completedChores / overallChores[0].overallChores) * 100).toFixed(2) : "0.00";
+    
+
 
     return res.json({
-      total: overallAssignmentCount[0].total,
-      completed: completedAssignmentCount[0].completed,
+      assignmentPercentage : assignmentPercentage,
+      examPercentage : examPercentage,
+      chorePercentage : chorePercentage
     });
   } catch (error) {
     console.error("Error fetching percentages:", error);
@@ -41,4 +103,4 @@ const getPercentages = async (req, res) => {
   }
 };
 
-export default getPercentages;
+export default getPercentage;
