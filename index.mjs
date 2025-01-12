@@ -10,9 +10,9 @@ dotenv.config();
 const app = express();
 
 // Middleware Setup
-app.use(cookieParser()); // Parsing cookies early on
-app.use(express.json()); // Parsing JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parsing URL-encoded request bodies
+app.use(cookieParser()); 
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
 
 // CORS Setup
 app.use(cors({
@@ -23,7 +23,6 @@ app.use(cors({
 // API Routes
 app.use('/api', mainRouter);
 
-// Basic Error Handling (Optional)
 app.use((req, res, next) => {
     res.status(404).send("Route not found");
 });
@@ -38,3 +37,17 @@ const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not provid
 app.listen(port, () => {
     console.log(`Server is running on port : ${port}`);
 });
+
+app.on('error', (err) => {
+    console.error('Server error:', err);
+
+    if (['ECONNREFUSED', 'ETIMEDOUT', 'EADDRINUSE'].includes(err.code)) {
+      console.log('Restarting server in 5 seconds...');
+      setTimeout(startServer, 100); 
+    }
+  });
+
+app.on('close', () => {
+    console.log('Server closed. Restarting...');
+    startServer();
+  });

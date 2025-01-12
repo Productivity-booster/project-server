@@ -15,7 +15,7 @@ const getAllNotification = async (req, res) => {
     const [assignments] = await db
       .promise()
       .query(
-        "SELECT title AS assigment_name, due_date AS assignment_duedate from assignment_tracker WHERE user_id = ?",
+        "SELECT title AS assignment_name, due_date AS assignment_duedate from assignment_tracker WHERE user_id = ?",
         [user_id]
       );
 
